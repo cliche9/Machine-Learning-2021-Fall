@@ -1,0 +1,18 @@
+# root
+/*
+!.gitignore
+# lab_1
+!/lab_1
+/lab_1/*
+!*.py
+!data1
+# lab_2
+!/lab_2
+/lab_2/*
+!*.py
+!data2
+# lab_3
+!/lab_3
+/lab_3/*
+!*.py
+!data3
