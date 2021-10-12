@@ -57,6 +57,7 @@ class RegularizedLogisticRegression:
                 z[i, j] = np.dot(map_feature(u[i], v[j]), theta)
 
         plt.contour(u, v, z.T, [0])
+        plt.title(f'Lambda={r_lambda}')
 
 if __name__ == "__main__":
     # load and scatter
@@ -64,14 +65,14 @@ if __name__ == "__main__":
     y = np.loadtxt("data3/ex3Logy.dat", delimiter=',').reshape(-1, 1)
     pos = np.where(y == 1)
     neg = np.where(y == 0)
-    plt.scatter(x[pos, 0], x[pos, 1], marker='o')
-    plt.scatter(x[neg, 0], x[neg, 1], marker='+')
     # train
-    x = map_feature(x[:, 0], x[:, 1])
-    regLogistic = RegularizedLogisticRegression(x, y)
-    for r_lambda in {0, 1, 10}:
-        regLogistic.Newton(r_lambda=r_lambda)
-    plt.xlabel('u')
-    plt.ylabel('v')
-    plt.legend()
+    regLogistic = RegularizedLogisticRegression(map_feature(x[:, 0], x[:, 1]), y)
+    lambdas = [0, 1, 10]
+    for i in range(len(lambdas)):
+        plt.subplot(1, len(lambdas), i + 1)
+        plt.scatter(x[pos, 0], x[pos, 1], marker='o')
+        plt.scatter(x[neg, 0], x[neg, 1], marker='+')
+        regLogistic.Newton(r_lambda=lambdas[i])
+        plt.xlabel('u')
+        plt.ylabel('v')
     plt.show()
