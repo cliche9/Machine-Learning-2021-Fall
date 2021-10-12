@@ -30,7 +30,7 @@ class RegularizedLinearRegression:
         x = np.column_stack( (np.ones(len(x_hat)), x_hat) )
         x = np.concatenate( (x, self.expand(x_hat, 5)), axis=1 )
         y_hat = np.dot(x, theta)
-        plt.plot(x_hat, y_hat, label=f'Lambda={self.r_lambda}')
+        plt.plot(x_hat, y_hat, '--', label=f'Lambda={self.r_lambda}')
 
 if __name__ == "__main__":
     x = np.loadtxt("data3/ex3Linx.dat")
