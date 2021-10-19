@@ -48,16 +48,7 @@ class RegularizedLogisticRegression:
             theta -= np.dot(np.linalg.inv(hessian), grad)
             loop += 1
 
-        u = np.linspace(-1, 1.5, 200)
-        v = np.linspace(-1, 1.5, 200)
-        z = np.zeros((len(u), len(v)))
-
-        for i in range(len(u)):
-            for j in range(len(v)):
-                z[i, j] = np.dot(map_feature(u[i], v[j]), theta)
-
-        plt.contour(u, v, z.T, [0])
-        plt.title(f'Lambda={r_lambda}')
+        return theta
 
 if __name__ == "__main__":
     # load and scatter
@@ -67,12 +58,42 @@ if __name__ == "__main__":
     neg = np.where(y == 0)
     # train
     regLogistic = RegularizedLogisticRegression(map_feature(x[:, 0], x[:, 1]), y)
-    lambdas = [0, 1, 10]
-    for i in range(len(lambdas)):
-        plt.subplot(1, len(lambdas), i + 1)
+    lambdas = [0, 1, 3, 5, 7, 10]
+    thetas = []
+    # boundary
+    plt.figure(1)
+    rows = cols = int(np.sqrt(len(lambdas)))
+    if rows * cols < len(lambdas):
+        cols += 1
+    for k in range(len(lambdas)):
+        plt.subplot(rows, cols, k + 1)
         plt.scatter(x[pos, 0], x[pos, 1], marker='o')
         plt.scatter(x[neg, 0], x[neg, 1], marker='+')
-        regLogistic.Newton(r_lambda=lambdas[i])
+        # solve theta
+        theta = regLogistic.Newton(r_lambda=lambdas[k])
+        thetas.append(theta)
+        # plot boundary
+        u = np.linspace(-1, 1.5, 200)
+        v = np.linspace(-1, 1.5, 200)
+        z = np.zeros((len(u), len(v)))
+
+        for i in range(len(u)):
+            for j in range(len(v)):
+                z[i, j] = np.dot(map_feature(u[i], v[j]), theta)
+
+        plt.contour(u, v, z.T, [0])
+        plt.title(f'$\lambda$={lambdas[k]}')
         plt.xlabel('u')
         plt.ylabel('v')
+    # lambda affects results
+    plt.figure(2)
+    l2_norms = [np.linalg.norm(theta) for theta in thetas]
+    plt.plot(lambdas, l2_norms, 'o')
+    plt.xlabel(r'$\lambda$')
+    plt.ylabel('L2-Norm')
+    # easy to observe
+    plt.figure(3)
+    plt.plot(lambdas[1:], l2_norms[1:])
+    plt.xlabel(r'$\lambda$')
+    plt.ylabel('L2-Norm')
     plt.show()
