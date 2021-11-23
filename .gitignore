@@ -16,16 +16,13 @@
 /lab_3/*
 !*.py
 !data3
-!实验报告
 # lab_4
 !/lab_4
 /lab_4/*
 !*.py
 !data4
-!实验报告
 # lab_5
 !/lab_5
 /lab_5/*
 !*.py
 !data5
-!实验报告
