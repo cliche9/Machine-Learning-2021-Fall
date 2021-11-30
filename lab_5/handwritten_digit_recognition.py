@@ -18,7 +18,7 @@ def str2img(file_path):
         t = t.reshape(28, 28)
         data_x.append(t)
 
-    return data_x, data_y
+    return data_x[:1000], data_y[:1000]
 
 def img2vec(source_images):
     n = source_images.shape[0]
@@ -58,7 +58,7 @@ if __name__ == "__main__":
     test_data = np.column_stack((vec_test_x, img_test_y))
     print("----------Done----------")
     # 建立SVM
-    Cs = [None, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+    Cs = np.arange(0, 100, 10)
     for c in Cs:
         print(f"----------Construct SVM model with C = {c}...----------")
         svm = SVM(training_data, test_data, C=c)
@@ -75,7 +75,11 @@ if __name__ == "__main__":
                 if c is None:
                     plt.imsave('实验报告/pic/c_None/wrong_{}.png'.format(i), img_training_x[svm.wrong_list[i]], cmap='gray')
                 else:
-                    plt.imsave('实验报告/pic/c_{}/wrong_{}.png'.format(c, i), img_training_x[svm.wrong_list[i]], cmap='gray')
+                    plt.imsave('实验报告/pic/train_wrong/wrong_{}_{}.png'.format(c, i), img_training_x[svm.wrong_list[i]], cmap='gray')
         print("----------Start testing SVM...----------")
         svm.test()
-
+        for i in range(len(svm.wrong_list)):
+            if c is None:
+                plt.imsave('实验报告/pic/test_wrong/wrong_{}.png'.format(i), img_training_x[svm.wrong_list[i]], cmap='gray')
+            else:
+                plt.imsave('实验报告/pic/test_wrong/wrong_{}_{}.png'.format(c, i), img_training_x[svm.wrong_list[i]], cmap='gray')

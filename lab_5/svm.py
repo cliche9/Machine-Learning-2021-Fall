@@ -194,6 +194,7 @@ class SVM(object):
     def test(self):
         y_predict = (self.predict(self.test_x))
         correct = np.sum(y_predict == self.test_y)
+        self.wrong_list = np.where(y_predict != self.test_y)[0]
         print(f"{correct} out of {len(y_predict)} predictions correct, {len(y_predict) - correct} out of {len(y_predict)} predictions wrong")
         print(f"correct rate = {correct / len(y_predict)}\nwrong rate = {(len(y_predict) - correct) / len(y_predict)}")
 
@@ -206,6 +207,7 @@ class SVM(object):
             self.wrong_list = np.where(y_predict != self.training_y)[0]
         print(f"{correct} out of {len(y_predict)} training data correct, {len(y_predict) - correct} out of {len(y_predict)} training data wrong")
         print(f"correct rate = {correct / len(y_predict)}\nwrong rate = {(len(y_predict) - correct) / len(y_predict)}")
+
 
 if __name__ == "__main__":
     img_count = 0
@@ -221,15 +223,11 @@ if __name__ == "__main__":
             svm.train()
             svm.training_error()
             svm.test()
-            plt.subplot(2, 2, j % 4 + 1)
             svm.plot_margin()
             # save images
-            if ((j+1) % 4 == 0 or j == len(c) - 1):
-                print('save')
-                plt.savefig(f"实验报告/pic/training_{i}_{out_count}.png", dpi=500)
-                img_count += 1
-                out_count += 1
-                if (j != len(c) - 1):
-                    plt.figure(img_count)
+            print('save')
+            plt.savefig(f"实验报告/pic/training_single_{i}_{out_count}.png", dpi=500)
+            img_count += 1
+            out_count += 1
 
     plt.close()

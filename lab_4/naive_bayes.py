@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-class NaiveBayes:
+class NaiveBayes(object):
     def __init__(self, training_data, test_data):
         self.training_x = training_data[:, :-1]
         self.training_y = training_data[:, -1]
