@@ -7,6 +7,7 @@ import cv2
 from pca import PCA
 from lab_5 import svm
 import matplotlib.pyplot as plt
+import time
 
 def load_data(get_avg_faces=False):
     path = 'data7/orl_faces/'
@@ -104,7 +105,30 @@ def acc_with_k_range(training_imgs, training_labels, test_imgs, test_labels):
     plt.savefig('data7/pic/OVO_OVR.png')
     plt.close()
 
+def compare_exe_time(training_imgs, training_labels, test_imgs, test_labels):
+    # PCA降维
+    for i, type in enumerate(svm.OneVs):
+        if i == 0:
+            print("OvR:")
+        elif i == 1:
+            print("OvO:")
+        pca = PCA(0.9)
+        training_data = np.hstack((pca.fit_transform(training_imgs.copy()), training_labels))
+        test_data = np.hstack((pca.transform(test_imgs.copy()), test_labels))
+        # 建立多分类SVM
+        multi_svm = svm.MultiSVM(training_data, test_data, kernel=svm.linear_kernel, C=0, multi_type=type)
+        # 训练
+        t_start = time.perf_counter()
+        multi_svm.train()
+        # 预测
+        start = time.perf_counter()
+        print(f'Train ---- CPU time: {start - t_start}s')
+        multi_svm.test()
+        end = time.perf_counter()
+        print (f'Test ---- CPU time: {end - start}s')
+
 if __name__ == "__main__":
     training_imgs, training_labels, test_imgs, test_labels = load_data(get_avg_faces=False)
-    get_misclassified_faces(training_imgs, training_labels, test_imgs, test_labels)
+    compare_exe_time(training_imgs, training_labels, test_imgs, test_labels)
+    # get_misclassified_faces(training_imgs, training_labels, test_imgs, test_labels)
     # acc_with_k_range(training_imgs, training_labels, test_imgs, test_labels)
