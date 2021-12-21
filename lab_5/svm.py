@@ -4,6 +4,8 @@ from cvxopt import solvers, matrix
 import numpy as np
 from numpy import linalg
 import matplotlib.pyplot as plt
+from enum import Enum
+from itertools import combinations
 
 def linear_kernel(x1, x2):
     return np.dot(x1, x2)
@@ -14,7 +16,7 @@ def polynominal_kernel(x, y, p=3):
 def gaussian_kernel(x, y, sigma=5.0):
     return np.exp(-linalg.norm(x - y) ** 2 / (2 * (sigma ** 2)))
 
-def RBF_kernel(x, y, gamma=100):
+def RBF_kernel(x, y, gamma=1/60):
     return np.exp(-gamma * linalg.norm(x - y) ** 2)
 
 class SVM(object):
@@ -77,7 +79,7 @@ class SVM(object):
 
         # 求weight vector --> \omega: 需要用到所有 alpha > 0 的情况
         # Support vectors have non zero lagrange multipliers
-        sv = alpha > 1e-5
+        sv = alpha > 1e-9
         idx_of_sv = np.arange(len(alpha))[sv]
         # support vectors with non zero lagrange multipliers
         self.alpha = alpha[sv]
@@ -97,7 +99,7 @@ class SVM(object):
 
         # Support vectors have non zero lagrange multipliers
         if self.C is not None and self.C > 0:
-            sv = np.bitwise_and(alpha > 1e-5, alpha < self.C)
+            sv = np.bitwise_and(alpha > 1e-9, alpha < self.C)
             idx_of_sv = np.arange(len(alpha))[sv]
             # support vectors with non zero lagrange multipliers
             self.alpha = alpha[sv]
@@ -208,6 +210,105 @@ class SVM(object):
         print(f"{correct} out of {len(y_predict)} training data correct, {len(y_predict) - correct} out of {len(y_predict)} training data wrong")
         print(f"correct rate = {correct / len(y_predict)}\nwrong rate = {(len(y_predict) - correct) / len(y_predict)}")
 
+class OneVs(Enum):
+    All = 0
+    One = 1
+
+class MultiSVM(object):
+
+    def __init__(self, training_data, test_data=None, kernel=linear_kernel, C=None, multi_type=OneVs.All):
+        # multi_type
+        self.multi_type = multi_type
+        self.kernel = kernel
+        self.C = float(C) if C is not None else C
+        self.training_x = training_data[:, :-1]
+        self.training_y = training_data[:, -1]
+        if test_data is not None:
+            self.test_x = test_data[:, :-1]
+            self.test_y = test_data[:, -1]
+        # 获取多分类个数
+        self.svm_set = dict()
+        self.classes = set(self.test_y)
+        if multi_type == OneVs.All:
+            self.train = self._one_vs_all
+        elif multi_type == OneVs.One:
+            self.train = self._one_vs_one
+
+    def _one_vs_one(self):
+        self.svm_set = dict()
+        x = self.training_x
+        self.all_pairs = list(combinations(self.classes, 2))
+
+        for pair in self.all_pairs:
+            training_label = self.training_y.copy()
+            pos_mask = training_label == pair[0]
+            neg_mask = training_label == pair[1]
+            training_label[pos_mask] = 1
+            training_label[neg_mask] = -1
+            sub_mask = np.logical_or(pos_mask, neg_mask)
+            sub_data = np.hstack((x[sub_mask], training_label[sub_mask].reshape(-1, 1)))
+            svm = SVM(training_data=sub_data, kernel=self.kernel, C=self.C)
+            svm.train()
+            self.svm_set[pair] = svm
+
+    def _one_vs_all(self):
+        self.svm_set = []
+        k = len(self.classes)
+        # 对每一个class建立一个svm二分类器, 区分one和rest
+        for i in range(1, k + 1):
+            training_label = self.training_y.copy()
+            pos_mask = training_label == i
+            training_label[pos_mask] = 1
+            training_label[np.invert(pos_mask)] = -1
+            svm = SVM(np.hstack((self.training_x, training_label.reshape(-1, 1))), kernel=self.kernel, C=self.C)
+            svm.train()
+            self.svm_set.append(svm)
+
+    def test(self):
+        y_predict = []
+        if self.multi_type == OneVs.One:
+            # one vs one: 对所有的组合预测, 投票制
+            vote = np.zeros((len(self.test_y), len(self.classes)))
+            for pair, svm in self.svm_set.items():
+                pair = np.array(pair).astype(np.int) - 1
+                y_predict = svm.project(self.test_x)
+                first_mask = y_predict > 0
+                for i, mask in enumerate(first_mask):
+                    if mask:
+                        vote[i][pair[0]] += 1
+                    else:
+                        vote[i][pair[1]] += 1
+            y_predict = np.argmax(vote, axis=1) + 1
+            # 获取预测正确和错误的数据
+            hits = y_predict == self.test_y
+            misclassified = np.logical_not(hits)
+            wrong_index = np.argwhere(misclassified).ravel()
+            # 计算正确率
+            correct = np.sum(hits)
+            print(f"{correct} out of {len(y_predict)} predictions correct, {len(y_predict) - correct} out of {len(y_predict)} predictions wrong")
+            print(f"correct rate = {correct / len(y_predict)}\nwrong rate = {(len(y_predict) - correct) / len(y_predict)}")
+            # 获取错误分类
+            true_labels = self.test_y[misclassified].astype(int)
+            wrong_labels = y_predict[misclassified]
+            return correct / len(y_predict), list(zip(wrong_index, true_labels, wrong_labels))
+
+        elif self.multi_type == OneVs.All:
+            # one vs all: 取预测概率最大的类作为预测类
+            for svm in self.svm_set:
+                y_predict.append(svm.project(self.test_x))
+            y_predict = np.argmax(y_predict, axis=0) + 1
+            # 获取预测正确和错误的数据
+            hits = y_predict == self.test_y
+            misclassified = np.logical_not(hits)
+            wrong_index = np.argwhere(misclassified).ravel()
+            # 计算正确率
+            correct = np.sum(hits)
+            print(f"{correct} out of {len(y_predict)} predictions correct, {len(y_predict) - correct} out of {len(y_predict)} predictions wrong")
+            print(f"correct rate = {correct / len(y_predict)}\nwrong rate = {(len(y_predict) - correct) / len(y_predict)}")
+            # 获取错误分类
+            true_labels = self.test_y[misclassified].astype(int)
+            wrong_labels = y_predict[misclassified]
+            return correct / len(y_predict), list(zip(wrong_index, true_labels, wrong_labels))
 
 if __name__ == "__main__":
     img_count = 0

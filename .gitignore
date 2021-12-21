@@ -31,3 +31,8 @@
 /lab_6/*
 !*.py
 !data6
+# lab_7
+!/lab_7
+/lab_7/*
+!*.py
+!data6
