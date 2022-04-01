@@ -1,38 +1,38 @@
 # root
 /*
 !.gitignore
-# lab_1
-!/lab_1
-/lab_1/*
+# exp1
+!/exp1
+/exp1/*
 !*.py
 !data1
-# lab_2
-!/lab_2
-/lab_2/*
+# exp2
+!/exp2
+/exp2/*
 !*.py
 !data2
-# lab_3
-!/lab_3
-/lab_3/*
+# exp3
+!/exp3
+/exp3/*
 !*.py
 !data3
-# lab_4
-!/lab_4
-/lab_4/*
+# exp4
+!/exp4
+/exp4/*
 !*.py
 !data4
-# lab_5
-!/lab_5
-/lab_5/*
+# exp5
+!/exp5
+/exp5/*
 !*.py
 !data5
-# lab_6
-!/lab_6
-/lab_6/*
+# exp6
+!/exp6
+/exp6/*
 !*.py
 !data6
-# lab_7
-!/lab_7
-/lab_7/*
+# exp7
+!/exp7
+/exp7/*
 !*.py
 !data7
