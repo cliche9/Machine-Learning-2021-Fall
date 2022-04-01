@@ -1,6 +1,7 @@
 # root
 /*
 !.gitignore
+!README.md
 # exp1
 !/exp1
 /exp1/*
